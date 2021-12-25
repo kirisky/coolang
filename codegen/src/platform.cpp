@@ -22,6 +22,10 @@
 #include "coolang/codegen/linux_platform.h"
 #endif
 
+#ifdef __APPLE__
+#include "coolang/codegen/macos_platform.h"
+#endif
+
 namespace coolang {
 namespace platform {
 
@@ -31,6 +35,10 @@ using PlatformClass = WindowsPlatform;
 
 #ifdef __unix__
 using PlatformClass = LinuxPlatform;
+#endif
+
+#ifdef __APPLE__
+using PlatformClass = MacPlatform;
 #endif
 
 std::string GetLinkerCommand(
