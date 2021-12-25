@@ -1,12 +1,21 @@
 cmake_minimum_required (VERSION 3.10)
 
-project(coolang)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(COOLANG_LLVM_VERSION 8)
+
+if (APPLE)
+  set(CMAKE_PREFIX_PATH /usr/local/opt/llvm@${COOLANG_LLVM_VERSION}/lib/cmake)
+  set(CUSTOM_CLANG_CLI /usr/local/opt/llvm@${COOLANG_LLVM_VERSION}/bin/clang)
+  set(CUSTOM_CLANG_XX_CLI /usr/local/opt/llvm@${COOLANG_LLVM_VERSION}/bin/clang++)
+  set(CMAKE_C_COMPILER ${CUSTOM_CLANG_CLI})
+  set(CMAKE_CXX_COMPILER ${CUSTOM_CLANG_XX_CLI})
+  set(CMAKE_OSX_SYSROOT /Library/Developer/CommandLineTools/SDKs/MacOSX11.sdk)
+endif()
+
+project(coolang)
 
 # on windows we can't run "clang++-8" we have to run "clang++ --version" and make sure it's 8
 if(WIN32)
@@ -21,6 +30,13 @@ if(WIN32)
   endif()
   
   set(COOLANG_CLANG_COMMAND clang++)
+elseif(APPLE)
+    EXECUTE_PROCESS(COMMAND ${CUSTOM_CLANG_XX_CLI} --version OUTPUT_VARIABLE CLANG_VERSION_OUTPUT)
+    if(NOT CLANG_VERSION_OUTPUT)
+      message(FATAL_ERROR "Coolang can't fetch clang's version")
+    endif()
+
+    set(COOLANG_CLANG_COMMAND ${CUSTOM_CLANG_XX_CLI})
 else()
   EXECUTE_PROCESS(COMMAND clang++-${COOLANG_LLVM_VERSION} --version OUTPUT_VARIABLE CLANG_VERSION_OUTPUT)
   if(NOT CLANG_VERSION_OUTPUT)
@@ -30,7 +46,11 @@ else()
   set(COOLANG_CLANG_COMMAND clang++-${COOLANG_LLVM_VERSION})
 endif()
 
-find_package(LLVM ${COOLANG_LLVM_VERSION} REQUIRED CONFIG)
+if (APPLE) 
+  find_package(LLVM REQUIRED CONFIG)
+else()
+  find_package(LLVM ${COOLANG_LLVM_VERSION} REQUIRED CONFIG)
+endif()
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
@@ -66,7 +86,7 @@ function(add_coolang_test proj)
   add_executable(${proj}_test test/${proj}_test.cpp)
   target_link_libraries(${proj}_test gtest gtest_main ${PROJECT_NAME})
   # older c++17 compilers reduire linking this to use std::filesystem
-  if (NOT MSVC)
+  if (NOT MSVC AND NOT APPLE)
     target_link_libraries(${proj}_test stdc++fs)
   endif()
   target_include_directories(${proj}_test SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/third_party/googletest/googletest/include)
@@ -89,6 +109,6 @@ target_link_libraries(${PROJECT_NAME} semantic)
 target_link_libraries(${PROJECT_NAME} codegen)
 
   # older c++17 compilers reduire linking this to use std::filesystem
-  if (NOT MSVC)
+  if (NOT MSVC AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} stdc++fs)
   endif()
