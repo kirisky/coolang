@@ -17,6 +17,13 @@ Coolang is a compiler for the [COOL language](https://en.wikipedia.org/wiki/Cool
     - you can use the auto-install script they provide if you want, just specify version 8. But you really only need: `clang-8`, `llvm-8`, and `llvm-8-dev`
 - also install the `libedit-dev` package since llvm fails to link if it's not installed
 
+#### macOS
+
+- CMake 3.10 (or more recent)
+- LLVM 8 and Clang 8
+    - see https://llvm.org/
+    - Homebrew: `brew install llvm`
+
 #### Windows
 
 - CMake 3.10 (or more recent)
@@ -56,6 +63,13 @@ $ ctest --verbose
 then compile a hello world program
 
 ##### Linux
+```
+$ echo "class Main inherits IO { main() : Object { out_string(\"Hello, world\\n\") }; };" > hello.cl
+$ ./coolang hello.cl
+$ ./hello
+Hello, world
+```
+##### macOS
 ```
 $ echo "class Main inherits IO { main() : Object { out_string(\"Hello, world\\n\") }; };" > hello.cl
 $ ./coolang hello.cl
